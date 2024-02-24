@@ -117,14 +117,15 @@ double phm_random::logFC(arma::vec & parm0, const int & p)
     }
     //Rcout << "lmd: " << lmd << "\n";
     for(int j = 0; j < J; j++){
-      
       arma::mat tb_j = tb.rows(find(tb.col(P)==(j+1)));
-      arma::mat X = tb_j.cols(0,P-1);
-      arma::mat stats = tb_j.cols(arma::span(tb_j.n_cols-2, tb_j.n_cols-1));
-      
-      ll +=   sum(stats.col(1)) * log(lmd[j])
-            - lmd[j] * sum(exp(X * beta) % stats.col(0))
-            +  sum((X * beta) % stats.col(1)); 
+      if(tb_j.n_rows != 0){
+        arma::mat X = tb_j.cols(0,P-1);
+        arma::mat stats = tb_j.cols(arma::span(tb_j.n_cols-2, tb_j.n_cols-1));
+        double sum_ev = sum(stats.col(1));
+        ll +=  sum_ev  * log(lmd[j])
+              - lmd[j] * sum(exp(X * beta) % stats.col(0))
+              +  sum((X * beta) % stats.col(1)); 
+      }
     }
   }
     //Rcout << "ll: " << ll << "\n";

@@ -50,7 +50,7 @@ public:
       std::string prior_beta0, arma::vec prior_beta_mu0, arma::vec prior_beta_sigma0,
       std::string prior_lambda0, arma::vec prior_lambda_hp10, arma::vec prior_lambda_hp20,
       arma::vec prior_lambdah_hp10, arma::vec prior_lambdah_hp20,
-      arma::vec & lower_limits0, arma::vec & upper_limits0, arma::vec & slice_widths0, bool & dCurrent0);
+      arma::vec lower_limits0, arma::vec upper_limits0, arma::vec slice_widths0, bool dCurrent0);
 
 
   double logFC(arma::vec & parm0, const int & p);
@@ -62,7 +62,7 @@ phm_fixed::phm_fixed( Rcpp::List & curr_tables0, Rcpp::List & hist_tables0, arma
           std::string prior_beta0, arma::vec prior_beta_mu0, arma::vec prior_beta_sigma0, 
           std::string prior_lambda0, arma::vec prior_lambda_hp10, arma::vec prior_lambda_hp20,
           arma::vec prior_lambdah_hp10, arma::vec prior_lambdah_hp20,
-         arma::vec & lower_limits0, arma::vec & upper_limits0, arma::vec & slice_widths0, bool & dCurrent0)
+         arma::vec lower_limits0, arma::vec upper_limits0, arma::vec slice_widths0, bool dCurrent0)
 {
 
   curr_tables = curr_tables0;
@@ -101,7 +101,7 @@ phm_fixed::phm_fixed( Rcpp::List & curr_tables0, Rcpp::List & hist_tables0, arma
 // Define the log likelihood 
 double phm_fixed::logFC(arma::vec & parm0, const int & p)
 {
-  //Rcout << "parm0: " << parm0 << "\n";
+  //Rcout << "p: " << p << "\n";
   // extract regression parameters;
   int n_int = sum(n_intervals);
   arma::vec beta = parm0.subvec(0,P-1);
@@ -115,7 +115,7 @@ double phm_fixed::logFC(arma::vec & parm0, const int & p)
     lambda_h = lambda;
   }
   //lambda_h = lambda;
-  //parm0 = {1,1,2,1,2};
+  //Rcout << "parm0: " << parm0 << "\n";
   //Rcout << "beta: " << beta << "\n";
   //Rcout << "p: " << p << "\n";
   //Rcout << "lambda: " << lambda << "\n";
@@ -132,9 +132,6 @@ double phm_fixed::logFC(arma::vec & parm0, const int & p)
     for(int s = 0; s < Sn; s++){
       arma::mat tb = curr_tables[s];
       //Rcout << "tb: " << tb << "\n";
-
-
-
       //arma::mat rt = rt_data[s];
 
       arma::vec cumu = cumsum(n_intervals);
@@ -148,16 +145,21 @@ double phm_fixed::logFC(arma::vec & parm0, const int & p)
       }
       //Rcout << "lmd: " << lmd << "\n";
       for(int j = 0; j < J; j++){
-        
+        //Rcout << "log(lmd[j]) " << log(lmd[j]) << "\n";
         arma::mat tb_j = tb.rows(find(tb.col(P)==(j+1)));
-        arma::mat X = tb_j.cols(0,P-1);
-        arma::mat stats = tb_j.cols(arma::span(tb_j.n_cols-2, tb_j.n_cols-1));
+        //Rcout << "tb_j" << tb_j.row(0) << "\n";
+        if(tb_j.n_rows != 0){
+          arma::mat X = tb_j.cols(0,P-1);
+          arma::mat stats = tb_j.cols(arma::span(tb_j.n_cols-2, tb_j.n_cols-1));
+          double sum_ev = sum(stats.col(1));
+          //Rcout << "sum_ev" << sum_ev << "\n";
+          ll +=   sum_ev * log(lmd[j])
+            - lmd[j] * sum(exp(X * beta) % stats.col(0))
+            +  sum((X * beta) % stats.col(1)); 
+        }
         
-        ll +=   sum(stats.col(1)) * log(lmd[j])
-              - lmd[j] * sum(exp(X * beta) % stats.col(0))
-              +  sum((X * beta) % stats.col(1)); 
               
-       //Rcout << "ll: " << sum(stats.col(1)) * log(lmd[j])
+        
        //                                - lmd[j] * sum(exp(X * beta) % stats.col(0))
        //                                +  sum((X * beta) % stats.col(1)) << "\n";
        //Rprintf("the value of v[%i] : %f \n", sum(stats.col(1)) * log(lmd[j])
@@ -198,12 +200,14 @@ double phm_fixed::logFC(arma::vec & parm0, const int & p)
         for(int j = 0; j < J; j++){
           
           arma::mat tb_j = tb.rows(find(tb.col(P)==(j+1)));
-          arma::mat X = tb_j.cols(0,P-1);
-          arma::mat stats = tb_j.cols(arma::span(tb_j.n_cols-2, tb_j.n_cols-1));
-          
-          ll +=   a0*(sum(stats.col(1)) * log(lmd[j])
-            - lmd[j] * sum(exp(X * beta) % stats.col(0))
-            +  sum((X * beta) % stats.col(1)));
+          if(tb_j.n_rows != 0){
+            arma::mat X = tb_j.cols(0,P-1);
+            arma::mat stats = tb_j.cols(arma::span(tb_j.n_cols-2, tb_j.n_cols-1));
+            double sum_ev = sum(stats.col(1));
+            ll +=   a0*(sum_ev * log(lmd[j])
+              - lmd[j] * sum(exp(X * beta) % stats.col(0))
+              +  sum((X * beta) % stats.col(1)));
+          } 
         }
      
       }
@@ -335,8 +339,8 @@ Rcpp::List phm_fixed_a0(Rcpp::List & curr_tables0, Rcpp::List & hist_tables0, ar
                        std::string prior_beta0, arma::vec prior_beta_mu0, arma::vec prior_beta_sigma0,
                        std::string prior_lambda0, arma::vec prior_lambda_hp10, arma::vec prior_lambda_hp20, 
                        arma::vec prior_lambdah_hp10, arma::vec prior_lambdah_hp20,
-                       arma::vec & lower_limits0, arma::vec & upper_limits0, arma::vec & slice_widths0, 
-                       int nMC, int nBI, bool & dCurrent0){
+                       arma::vec lower_limits0, arma::vec upper_limits0, arma::vec slice_widths0, 
+                       int nMC, int nBI, bool dCurrent0){
   
   // declare object and set values;
    phm_fixed b(curr_tables0,hist_tables0,a0_vec0,n_intervals0,shared_blh0,P0,prior_beta0,prior_beta_mu0,prior_beta_sigma0,

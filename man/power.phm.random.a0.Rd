@@ -9,7 +9,7 @@ power.phm.random.a0(
   n.subjects,
   n.events,
   n.intervals,
-  change.points = NULL,
+  change.points,
   samp.prior.beta,
   samp.prior.lambda,
   dist.enroll,
@@ -52,8 +52,9 @@ power.phm.random.a0(
 
 \item{n.intervals}{Vector of integers, indicating the number of intervals for the baseline hazards for each stratum. The length of the vector should be equal to the total number of strata.}
 
-\item{change.points}{List of vectors. Each vector in the list contains the change points for the baseline hazards for each stratum. The length of the vector should be equal to the total number of strata.
-By default, we assign the change points so that the same number of events are observed in all the intervals in the historical data.}
+\item{change.points}{List of vectors. Each vector in the list contains the change points for the baseline hazards for each stratum. The length of the list should be equal to the total number of strata.
+For a given stratum, if there is only one interval, then \code{change.points} should be \code{NULL} for that stratum.
+These change points are used for data generation. The change points used during model fitting are assigned by default so that the same number of events are observed in all the intervals in the pooled historical and generated current data.}
 
 \item{samp.prior.beta}{Matrix of possible values of \eqn{\beta} to sample (with replacement) from. Each row is a possible \eqn{\beta} vector (a realization from the sampling prior for \eqn{\beta}).}
 
@@ -182,6 +183,7 @@ n.events <- 30
 
 # We choose three intervals for the first stratum and two intervals for the second stratum
 n.intervals <- c(3,2) 
+change.points <- list(c(1,2),1)
 
 # Generate sampling priors
 
@@ -204,7 +206,8 @@ nBI <- 50
 N <- 5 # N should be larger in practice
 
 result <- power.phm.random.a0(historical=historical, n.subjects=n.subjects, 
-                              n.events=n.events, n.intervals=n.intervals, 
+                              n.events=n.events, n.intervals=n.intervals,
+                              change.points=change.points,  
                               samp.prior.beta=samp.prior.beta, 
                               samp.prior.lambda=samp.prior.lambda,
                               prior.a0.shape1 = c(1,1), prior.a0.shape2 = c(1,1),

@@ -7,7 +7,9 @@ utils::globalVariables(c("r", "ev", "interval", "rtime", "evtime"))
 #' The function returns discrete samples of \eqn{\beta} from the normalized power prior, and the user can use any mixture of multivariate normal distributions as an 
 #' approximation for the normalized power prior for \eqn{\beta}.
 #' This function is used to produce \code{prior.beta.mvn} in the function \code{\link{power.phm.random.a0}}.
-#' 
+#' @param change.points List of vectors. Each vector in the list contains the change points for the baseline hazards for each stratum. The length of the list should be equal to the total number of strata. 
+#' For a given stratum, if there is only one interval, then \code{change.points} should be \code{NULL} for that stratum. 
+#' By default, we assign the change points so that the same number of events are observed in all the intervals in the historical data.  
 #' @param prior.a0.shape1 Vector of the first shape parameters of the independent beta priors for \eqn{a_0}. The length of the vector should be equal to the number of historical datasets. The default is a vector of one's.
 #' @param prior.a0.shape2 Vector of the second shape parameters of the independent beta priors for \eqn{a_0}. The length of the vector should be equal to the number of historical datasets. The default is a vector of one's.
 #' @param prior.beta.mean Vector of means of the normal initial prior on \eqn{\beta}. The default value is zero for all the elements of \eqn{\beta}.
@@ -96,9 +98,13 @@ approximate.prior.beta <- function(historical, n.intervals, change.points=NULL,
   if(is.null(change.points)){
       change.points.new <- create_intervals_historical(historical, n.intervals)
   }else{
-    for(i in 1:length(change.points)){
-      l <- change.points[[i]]
-      l1 <- unique(c(0, l, Inf))
+    for(i in 1:length(n.intervals)){
+      if(n.intervals[i]==1){
+        l1 <- c(0, Inf)
+      }else{
+        l <- change.points[[i]]
+        l1 <- unique(c(0, l, Inf))
+      }
       change.points.new[[i]] <- l1
     }
   }
@@ -207,6 +213,7 @@ approximate.prior.beta <- function(historical, n.intervals, change.points=NULL,
 #' 
 #' # We choose three intervals for the first stratum and two intervals for the second stratum
 #' n.intervals <- c(3,2) 
+#' change.points <- list(c(1,2),1)
 #' 
 #' # Generate sampling priors
 #' 
@@ -229,7 +236,8 @@ approximate.prior.beta <- function(historical, n.intervals, change.points=NULL,
 #' N <- 5 # N should be larger in practice
 #' 
 #' result <- power.phm.random.a0(historical=historical, n.subjects=n.subjects, 
-#'                               n.events=n.events, n.intervals=n.intervals, 
+#'                               n.events=n.events, n.intervals=n.intervals,
+#'                               change.points=change.points,  
 #'                               samp.prior.beta=samp.prior.beta, 
 #'                               samp.prior.lambda=samp.prior.lambda,
 #'                               prior.a0.shape1 = c(1,1), prior.a0.shape2 = c(1,1),
@@ -245,7 +253,7 @@ approximate.prior.beta <- function(historical, n.intervals, change.points=NULL,
 #' @import dplyr tidyr
 #' @importFrom stats cov runif rexp rbinom
 power.phm.random.a0 <- function(historical, n.subjects, n.events, 
-                               n.intervals, change.points=NULL, 
+                               n.intervals, change.points, 
                                samp.prior.beta, samp.prior.lambda, # list of matrices
                                dist.enroll, param.enroll,
                                rand.prob=0.5, prob.drop=0, param.drop=0, 
@@ -258,15 +266,16 @@ power.phm.random.a0 <- function(historical, n.subjects, n.events,
   
   # add zero and infinity to change.points
   change.points.new <- list()
-  if(is.null(change.points)){
-    change.points.new <- create_intervals_historical(historical,n.intervals)
-  }else{
-    for(i in 1:length(change.points)){
+  for(i in 1:length(n.intervals)){
+    if(n.intervals[i]==1){
+      l1 <- c(0, Inf)
+    }else{
       l <- change.points[[i]]
       l1 <- unique(c(0, l, Inf))
-      change.points.new[[i]] <- l1
     }
+    change.points.new[[i]] <- l1
   }
+  
   
   # if prior.beta.mvn is NULL, make its default value a single multivariate normal
   if(is.null(prior.beta.mvn)){
@@ -412,8 +421,11 @@ power.phm.random.a0 <- function(historical, n.subjects, n.events,
     finaldf$new_nu <- ifelse(finaldf$t_elps > stoptime, 0, finaldf$nu)
     
     # create tables
+    # choose change points so that there are equal number of events in the intervals in pooled current and historical data
+    change.points.analysis <- create_intervals(time=finaldf$new_y, event=finaldf$new_nu, S=finaldf$S, 
+                                               historical=historical, n.intervals=n.intervals)
     tables <- collapse_data(time=finaldf$new_y, event=finaldf$new_nu, X=finaldf[,1:ncol(x)], S=finaldf$S, 
-                  historical=historical, n.intervals=n.intervals, change.points=change.points.new, dCurrent=TRUE)
+                  historical=historical, n.intervals=n.intervals, change.points=change.points.analysis, dCurrent=TRUE)
     t1 <- tables[["curr_tables"]]
     t2 <- tables[["hist_tables"]]
     #print(t1)
@@ -476,7 +488,8 @@ power.phm.random.a0 <- function(historical, n.subjects, n.events,
 #' Model fitting for the proportional hazards model with piecewise constant hazard and random a0
 #'
 #' @description Model fitting using the normalized power prior for the proportional hazards model with piecewise constant hazard and random \eqn{a_0}
-#' @param change.points List of vectors. Each vector in the list contains the change points for the baseline hazards for each stratum. The length of the vector should be equal to the total number of strata. 
+#' @param change.points List of vectors. Each vector in the list contains the change points for the baseline hazards for each stratum. The length of the list should be equal to the total number of strata. 
+#' For a given stratum, if there is only one interval, then \code{change.points} should be \code{NULL} for that stratum. 
 #' By default, we assign the change points so that the same number of events are observed in all the intervals in the pooled current and historical data.  
 #' 
 #' @inheritParams power.phm.random.a0
@@ -575,9 +588,13 @@ phm.random.a0 <- function(time, event, X, S, historical, n.intervals, change.poi
   if(is.null(change.points)){
     change.points.new <- create_intervals(time, event, S, historical, n.intervals)
   }else{
-    for(i in 1:length(change.points)){
-      l <- change.points[[i]]
-      l1 <- unique(c(0, l, Inf))
+    for(i in 1:length(n.intervals)){
+      if(n.intervals[i]==1){
+        l1 <- c(0, Inf)
+      }else{
+        l <- change.points[[i]]
+        l1 <- unique(c(0, l, Inf))
+      }
       change.points.new[[i]] <- l1
     }
   }

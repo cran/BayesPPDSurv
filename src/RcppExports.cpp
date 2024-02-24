@@ -12,7 +12,7 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // phm_fixed_a0
-Rcpp::List phm_fixed_a0(Rcpp::List& curr_tables0, Rcpp::List& hist_tables0, arma::vec& a0_vec0, arma::vec& n_intervals0, bool& shared_blh0, int P0, std::string prior_beta0, arma::vec prior_beta_mu0, arma::vec prior_beta_sigma0, std::string prior_lambda0, arma::vec prior_lambda_hp10, arma::vec prior_lambda_hp20, arma::vec prior_lambdah_hp10, arma::vec prior_lambdah_hp20, arma::vec& lower_limits0, arma::vec& upper_limits0, arma::vec& slice_widths0, int nMC, int nBI, bool& dCurrent0);
+Rcpp::List phm_fixed_a0(Rcpp::List& curr_tables0, Rcpp::List& hist_tables0, arma::vec& a0_vec0, arma::vec& n_intervals0, bool& shared_blh0, int P0, std::string prior_beta0, arma::vec prior_beta_mu0, arma::vec prior_beta_sigma0, std::string prior_lambda0, arma::vec prior_lambda_hp10, arma::vec prior_lambda_hp20, arma::vec prior_lambdah_hp10, arma::vec prior_lambdah_hp20, arma::vec lower_limits0, arma::vec upper_limits0, arma::vec slice_widths0, int nMC, int nBI, bool dCurrent0);
 RcppExport SEXP _BayesPPDSurv_phm_fixed_a0(SEXP curr_tables0SEXP, SEXP hist_tables0SEXP, SEXP a0_vec0SEXP, SEXP n_intervals0SEXP, SEXP shared_blh0SEXP, SEXP P0SEXP, SEXP prior_beta0SEXP, SEXP prior_beta_mu0SEXP, SEXP prior_beta_sigma0SEXP, SEXP prior_lambda0SEXP, SEXP prior_lambda_hp10SEXP, SEXP prior_lambda_hp20SEXP, SEXP prior_lambdah_hp10SEXP, SEXP prior_lambdah_hp20SEXP, SEXP lower_limits0SEXP, SEXP upper_limits0SEXP, SEXP slice_widths0SEXP, SEXP nMCSEXP, SEXP nBISEXP, SEXP dCurrent0SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -31,12 +31,12 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::vec >::type prior_lambda_hp20(prior_lambda_hp20SEXP);
     Rcpp::traits::input_parameter< arma::vec >::type prior_lambdah_hp10(prior_lambdah_hp10SEXP);
     Rcpp::traits::input_parameter< arma::vec >::type prior_lambdah_hp20(prior_lambdah_hp20SEXP);
-    Rcpp::traits::input_parameter< arma::vec& >::type lower_limits0(lower_limits0SEXP);
-    Rcpp::traits::input_parameter< arma::vec& >::type upper_limits0(upper_limits0SEXP);
-    Rcpp::traits::input_parameter< arma::vec& >::type slice_widths0(slice_widths0SEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type lower_limits0(lower_limits0SEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type upper_limits0(upper_limits0SEXP);
+    Rcpp::traits::input_parameter< arma::vec >::type slice_widths0(slice_widths0SEXP);
     Rcpp::traits::input_parameter< int >::type nMC(nMCSEXP);
     Rcpp::traits::input_parameter< int >::type nBI(nBISEXP);
-    Rcpp::traits::input_parameter< bool& >::type dCurrent0(dCurrent0SEXP);
+    Rcpp::traits::input_parameter< bool >::type dCurrent0(dCurrent0SEXP);
     rcpp_result_gen = Rcpp::wrap(phm_fixed_a0(curr_tables0, hist_tables0, a0_vec0, n_intervals0, shared_blh0, P0, prior_beta0, prior_beta_mu0, prior_beta_sigma0, prior_lambda0, prior_lambda_hp10, prior_lambda_hp20, prior_lambdah_hp10, prior_lambdah_hp20, lower_limits0, upper_limits0, slice_widths0, nMC, nBI, dCurrent0));
     return rcpp_result_gen;
 END_RCPP

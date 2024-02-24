@@ -183,8 +183,9 @@ collapse_data <- function(time, event, X, S, historical, n.intervals, change.poi
 #' @param n.subjects Number of subjects enrolled. 
 #' @param n.events Number of events at which the trial will stop. 
 #' @param n.intervals Vector of integers, indicating the number of intervals for the baseline hazards for each stratum. The length of the vector should be equal to the total number of strata. 
-#' @param change.points List of vectors. Each vector in the list contains the change points for the baseline hazards for each stratum. The length of the vector should be equal to the total number of strata. 
-#' By default, we assign the change points so that the same number of events are observed in all the intervals in the historical data.  
+#' @param change.points List of vectors. Each vector in the list contains the change points for the baseline hazards for each stratum. The length of the list should be equal to the total number of strata.
+#' For a given stratum, if there is only one interval, then \code{change.points} should be \code{NULL} for that stratum.  
+#' These change points are used for data generation. The change points used during model fitting are assigned by default so that the same number of events are observed in all the intervals in the pooled historical and generated current data.  
 #' @param shared.blh Logical value indicating whether baseline hazard parameters are shared between the current and historical data. If TRUE, baseline hazard parameters are shared. The default value is FALSE. 
 #' @param samp.prior.beta Matrix of possible values of \eqn{\beta} to sample (with replacement) from. Each row is a possible \eqn{\beta} vector (a realization from the sampling prior for \eqn{\beta}).
 #' @param samp.prior.lambda List of matrices, where each matrix represents the sampling prior for the baseline hazards for each stratum. The number of columns of each matrix should be equal to the number of intervals for that stratum.
@@ -304,6 +305,7 @@ collapse_data <- function(time, event, X, S, historical, n.intervals, change.poi
 #' 
 #' # We choose three intervals for the first stratum and two intervals for the second stratum
 #' n.intervals <- c(3,2) 
+#' change.points <- list(c(1,2),1)
 #' 
 #' 
 #' # Generate sampling priors
@@ -327,7 +329,8 @@ collapse_data <- function(time, event, X, S, historical, n.intervals, change.poi
 #' N <- 5 # N should be larger in practice
 #' 
 #' result <- power.phm.fixed.a0(historical=historical, a0=a0, n.subjects=n.subjects, 
-#'                              n.events=n.events, n.intervals=n.intervals, 
+#'                              n.events=n.events, n.intervals=n.intervals,
+#'                              change.points=change.points, 
 #'                              samp.prior.beta=samp.prior.beta, 
 #'                              samp.prior.lambda=samp.prior.lambda,
 #'                              dist.enroll="Uniform", param.enroll=0.5,
@@ -343,7 +346,7 @@ collapse_data <- function(time, event, X, S, historical, n.intervals, change.poi
 #' @import dplyr tidyr 
 #' @importFrom stats runif rexp rbinom
 power.phm.fixed.a0 <- function(historical, a0, n.subjects, n.events, 
-                               n.intervals, change.points=NULL, shared.blh=FALSE,
+                               n.intervals, change.points, shared.blh=FALSE,
                                samp.prior.beta, samp.prior.lambda, # list of matrices
                                x.samples=matrix(), s.samples=NULL, # these two are matrices
                                dist.enroll, param.enroll,
@@ -357,16 +360,16 @@ power.phm.fixed.a0 <- function(historical, a0, n.subjects, n.events,
   
   # add zero and infinity to change.points
   change.points.new <- list()
-  if(is.null(change.points)){
-    change.points.new <- create_intervals_historical(historical,n.intervals)
-  }else{
-    for(i in 1:length(change.points)){
+  
+  for(i in 1:length(n.intervals)){
+    if(n.intervals[i]==1){
+      l1 <- c(0, Inf)
+    }else{
       l <- change.points[[i]]
       l1 <- unique(c(0, l, Inf))
-      change.points.new[[i]] <- l1
     }
+    change.points.new[[i]] <- l1
   }
-  
 
   # build matrix of covariates to sample from
   if(length(historical)==0){
@@ -521,12 +524,15 @@ power.phm.fixed.a0 <- function(historical, a0, n.subjects, n.events,
     finaldf$new_nu <- ifelse(finaldf$t_elps > stoptime, 0, finaldf$nu)
     
     # create tables
+    
+    # choose change points so that there are equal number of events in the intervals in pooled current and historical data
+    change.points.analysis <- create_intervals(time=finaldf$new_y, event=finaldf$new_nu, S=finaldf$S, 
+                                               historical=historical, n.intervals=n.intervals)
     tables <- collapse_data(time=finaldf$new_y, event=finaldf$new_nu, X=finaldf[,1:ncol(x)], S=finaldf$S, 
-                  historical=historical, n.intervals=n.intervals, change.points=change.points.new, dCurrent=TRUE)
+                  historical=historical, n.intervals=n.intervals, change.points=change.points.analysis, dCurrent=TRUE)
     t1 <- tables[["curr_tables"]]
     t2 <- tables[["hist_tables"]]
-    #print(t1)
-    #print(t2)
+
     if(is.null(lower.limits)){
       lower.limits = c(rep(-100,P), rep(0,2*sum(n.intervals)))
     }
@@ -618,7 +624,8 @@ power.phm.fixed.a0 <- function(historical, a0, n.subjects, n.events,
 #' @param event Vector of status indicators. Normally 0=alive and 1=dead.
 #' @param X Matrix of covariates. The first column must be the treatment indicator. 
 #' @param S Vector of integers, where each integer represents the stratum that the subject belongs to. For example, if there are three strata, S can take values 1, 2 or 3. 
-#' @param change.points List of vectors. Each vector in the list contains the change points for the baseline hazards for each stratum. The length of the vector should be equal to the total number of strata. 
+#' @param change.points List of vectors. Each vector in the list contains the change points for the baseline hazards for each stratum. The length of the list should be equal to the total number of strata. 
+#' For a given stratum, if there is only one interval, then \code{change.points} should be \code{NULL} for that stratum. 
 #' By default, we assign the change points so that the same number of events are observed in all the intervals in the pooled current and historical data.  
 #' @param current.data Logical value indicating whether current data is included. The default is TRUE. If FALSE, only historical data is included in the analysis,
 #' and the posterior samples can be used as a discrete approximation to the sampling prior in 
@@ -719,9 +726,13 @@ phm.fixed.a0 <- function(time=NULL, event=NULL, X=NULL, S=NULL, historical, a0, 
     }
     
   }else{
-    for(i in 1:length(change.points)){
-      l <- change.points[[i]]
-      l1 <- unique(c(0, l, Inf))
+    for(i in 1:length(n.intervals)){
+      if(n.intervals[i]==1){
+        l1 <- c(0, Inf)
+      }else{
+        l <- change.points[[i]]
+        l1 <- unique(c(0, l, Inf))
+      }
       change.points.new[[i]] <- l1
     }
   }
