@@ -9,7 +9,7 @@ power.phm.random.a0(
   n.subjects,
   n.events,
   n.intervals,
-  change.points,
+  change.points = NULL,
   samp.prior.beta,
   samp.prior.lambda,
   dist.enroll,
@@ -22,6 +22,10 @@ power.phm.random.a0(
   min.follow.up = 0,
   max.follow.up = 10000,
   prior.beta.mvn = NULL,
+  prior.beta.mean = rep(0, 50),
+  prior.beta.sd = rep(1000, 50),
+  prior.lambda0.hp1 = rep(10^(-5), 50),
+  prior.lambda0.hp2 = rep(10^(-5), 50),
   prior.a0.shape1 = rep(1, 10),
   prior.a0.shape2 = rep(1, 10),
   prior.lambda.hp1 = rep(10^(-5), 50),
@@ -53,7 +57,7 @@ power.phm.random.a0(
 \item{n.intervals}{Vector of integers, indicating the number of intervals for the baseline hazards for each stratum. The length of the vector should be equal to the total number of strata.}
 
 \item{change.points}{List of vectors. Each vector in the list contains the change points for the baseline hazards for each stratum. The length of the list should be equal to the total number of strata.
-For a given stratum, if there is only one interval, then \code{change.points} should be \code{NULL} for that stratum.
+For a given stratum, if there is only one interval, then \code{change.points} should be \code{NULL} for that stratum. By default, we assign the change points so that the same number of events are observed in all the intervals in the historical data.
 These change points are used for data generation. The change points used during model fitting are assigned by default so that the same number of events are observed in all the intervals in the pooled historical and generated current data.}
 
 \item{samp.prior.beta}{Matrix of possible values of \eqn{\beta} to sample (with replacement) from. Each row is a possible \eqn{\beta} vector (a realization from the sampling prior for \eqn{\beta}).}
@@ -82,20 +86,30 @@ The default value is 10^4.}
 
 \item{max.follow.up}{Maximum amount of time for which subjects are followed up. The default value is 10^4.}
 
-\item{prior.beta.mvn}{List of vectors of multivariate normal approximations of the normalized power prior for \eqn{\beta}. Each vector has three elements,
+\item{prior.beta.mvn}{List of multivariate normal approximations of the normalized power prior for \eqn{\beta}. Each element in the list is a list with three components,
 the mean vector, the covariance matrix and the weight of the multivariate normal distribution. The normalized power prior for \eqn{\beta}
-is approximated by the weighted mixture of the multivariate normal distributions provided. By default, a single multivariate normal distribution is assumed.
+is approximated by the weighted mixture of the multivariate normal distributions provided. By default (\code{prior.beta.mvn=NULL}), a single multivariate normal distribution is assumed.
 The user can use the \code{\link{approximate.prior.beta}} function to obtain samples of \eqn{\beta} from the normalized power prior, and use any mixture of multivariate normals to approximate
 the normalized power prior for \eqn{\beta}.}
 
-\item{prior.a0.shape1}{Vector of the first shape parameters of the independent beta priors for \eqn{a_0}. The length of the vector should be equal to the number of historical datasets. The default is a vector of one's.}
+\item{prior.beta.mean}{(Only applies if \code{prior.beta.mvn=NULL}) Vector of means of the normal initial prior on \eqn{\beta}. The default value is zero for all the elements of \eqn{\beta}.}
 
-\item{prior.a0.shape2}{Vector of the second shape parameters of the independent beta priors for \eqn{a_0}. The length of the vector should be equal to the number of historical datasets. The default is a vector of one's.}
+\item{prior.beta.sd}{(Only applies if \code{prior.beta.mvn=NULL}) Vector of standard deviations of the normal initial prior on \eqn{\beta}. The default value is 10^3 for all the elements of \eqn{\beta}.}
 
-\item{prior.lambda.hp1}{Vector of first hyperparameters of the Gamma initial prior on \eqn{\lambda}.
+\item{prior.lambda0.hp1}{(Only applies if \code{prior.beta.mvn=NULL}) Vector of first hyperparameters of the Gamma prior on \eqn{\lambda_0}.
+The length of the vector should be equal to the dimension of \eqn{\lambda_0}, i.e., the total number of intervals for all strata. The default value is 10^(-5) for all the elements of \eqn{\lambda_0}.}
+
+\item{prior.lambda0.hp2}{(Only applies if \code{prior.beta.mvn=NULL}) Vector of second hyperparameters of the Gamma prior on \eqn{\lambda_0}.
+The length of the vector should be equal to the dimension of \eqn{\lambda_0}, i.e., the total number of intervals for all strata. The default value is 10^(-5) for all the elements of \eqn{\lambda_0}.}
+
+\item{prior.a0.shape1}{(Only applies if \code{prior.beta.mvn=NULL}) Vector of the first shape parameters of the independent beta priors for \eqn{a_0}. The length of the vector should be equal to the number of historical datasets. The default is a vector of one's.}
+
+\item{prior.a0.shape2}{(Only applies if \code{prior.beta.mvn=NULL}) Vector of the second shape parameters of the independent beta priors for \eqn{a_0}. The length of the vector should be equal to the number of historical datasets. The default is a vector of one's.}
+
+\item{prior.lambda.hp1}{Vector of first hyperparameters of the Gamma prior on \eqn{\lambda}.
 The length of the vector should be equal to the dimension of \eqn{\lambda}, i.e., the total number of intervals for all strata. The default value is 10^(-5) for all the elements of \eqn{\lambda}.}
 
-\item{prior.lambda.hp2}{Vector of second hyperparameters of the Gamma initial prior on \eqn{\lambda}.
+\item{prior.lambda.hp2}{Vector of second hyperparameters of the Gamma prior on \eqn{\lambda}.
 The length of the vector should be equal to the dimension of \eqn{\lambda}, i.e., the total number of intervals for all strata. The default value is 10^(-5) for all the elements of \eqn{\lambda}.}
 
 \item{lower.limits}{Vector of lower limits for parameters (\eqn{\beta} and \eqn{\lambda}, in this order) to be used by the slice sampler. The length of the vector should be equal to the total number of parameters. The default is -100 for \eqn{\beta} and 0 for \eqn{\lambda} (may not be appropriate for all situations).}
@@ -135,7 +149,7 @@ the normalized power prior for \eqn{\beta}. By default, a single multivariate no
 
 Baseline hazard parameters for the
 current and historical data are NOT shared. The baseline hazards of the current data are denoted by \eqn{\lambda}.
-The baseline hazards of the historical data are denoted by \eqn{\lambda_0}. We assume Gamma initial priors for
+The baseline hazards of the historical data are denoted by \eqn{\lambda_0}. We assume Gamma priors for
 \eqn{\lambda} and \eqn{\lambda_0}.
 
 To perform sample size determination, we test the hypotheses

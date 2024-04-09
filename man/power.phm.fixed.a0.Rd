@@ -10,7 +10,7 @@ power.phm.fixed.a0(
   n.subjects,
   n.events,
   n.intervals,
-  change.points,
+  change.points = NULL,
   shared.blh = FALSE,
   samp.prior.beta,
   samp.prior.lambda,
@@ -62,7 +62,7 @@ power.phm.fixed.a0(
 \item{n.intervals}{Vector of integers, indicating the number of intervals for the baseline hazards for each stratum. The length of the vector should be equal to the total number of strata.}
 
 \item{change.points}{List of vectors. Each vector in the list contains the change points for the baseline hazards for each stratum. The length of the list should be equal to the total number of strata.
-For a given stratum, if there is only one interval, then \code{change.points} should be \code{NULL} for that stratum.
+For a given stratum, if there is only one interval, then \code{change.points} should be \code{NULL} for that stratum. By default, we assign the change points so that the same number of events are observed in all the intervals in the historical data.
 These change points are used for data generation. The change points used during model fitting are assigned by default so that the same number of events are observed in all the intervals in the pooled historical and generated current data.}
 
 \item{shared.blh}{Logical value indicating whether baseline hazard parameters are shared between the current and historical data. If TRUE, baseline hazard parameters are shared. The default value is FALSE.}

@@ -44,10 +44,10 @@ By default, we assign the change points so that the same number of events are ob
 
 \item{prior.beta.sd}{Vector of standard deviations of the normal initial prior on \eqn{\beta}. The default value is 10^3 for all the elements of \eqn{\beta}.}
 
-\item{prior.lambda0.hp1}{Vector of first hyperparameters of the Gamma initial prior on \eqn{\lambda_0}.
+\item{prior.lambda0.hp1}{Vector of first hyperparameters of the Gamma prior on \eqn{\lambda_0}.
 The length of the vector should be equal to the dimension of \eqn{\lambda_0}, i.e., the total number of intervals for all strata. The default value is 10^(-5) for all the elements of \eqn{\lambda_0}.}
 
-\item{prior.lambda0.hp2}{Vector of second hyperparameters of the Gamma initial prior on \eqn{\lambda_0}.
+\item{prior.lambda0.hp2}{Vector of second hyperparameters of the Gamma prior on \eqn{\lambda_0}.
 The length of the vector should be equal to the dimension of \eqn{\lambda_0}, i.e., the total number of intervals for all strata. The default value is 10^(-5) for all the elements of \eqn{\lambda_0}.}
 
 \item{lower.limits}{Vector of lower limits for \eqn{\beta} to be used by the slice sampler. The length of the vector should be equal to the length of \eqn{\beta}. The default is -100 for all the elements of \eqn{\beta} (may not be appropriate for all situations).}
@@ -76,7 +76,7 @@ approximation for the normalized power prior for \eqn{\beta}.
 
 Baseline hazard parameters for the
 current and historical data are NOT shared.
-The baseline hazards of the historical data are denoted by \eqn{\lambda_0}. We assume Gamma initial priors for \eqn{\lambda_0}
+The baseline hazards of the historical data are denoted by \eqn{\lambda_0}. We assume Gamma priors for \eqn{\lambda_0}
 and independent normal initial priors for \eqn{\beta}.
 
 Posterior samples are obtained through slice sampling.

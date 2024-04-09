@@ -14,9 +14,9 @@ utils::globalVariables(c("r", "ev", "interval", "rtime", "evtime"))
 #' @param prior.a0.shape2 Vector of the second shape parameters of the independent beta priors for \eqn{a_0}. The length of the vector should be equal to the number of historical datasets. The default is a vector of one's.
 #' @param prior.beta.mean Vector of means of the normal initial prior on \eqn{\beta}. The default value is zero for all the elements of \eqn{\beta}.
 #' @param prior.beta.sd Vector of standard deviations of the normal initial prior on \eqn{\beta}. The default value is 10^3 for all the elements of \eqn{\beta}. 
-#' @param prior.lambda0.hp1 Vector of first hyperparameters of the Gamma initial prior on \eqn{\lambda_0}. 
+#' @param prior.lambda0.hp1 Vector of first hyperparameters of the Gamma prior on \eqn{\lambda_0}. 
 #' The length of the vector should be equal to the dimension of \eqn{\lambda_0}, i.e., the total number of intervals for all strata. The default value is 10^(-5) for all the elements of \eqn{\lambda_0}.
-#' @param prior.lambda0.hp2 Vector of second hyperparameters of the Gamma initial prior on \eqn{\lambda_0}. 
+#' @param prior.lambda0.hp2 Vector of second hyperparameters of the Gamma prior on \eqn{\lambda_0}. 
 #' The length of the vector should be equal to the dimension of \eqn{\lambda_0}, i.e., the total number of intervals for all strata. The default value is 10^(-5) for all the elements of \eqn{\lambda_0}.
 #' @param lower.limits Vector of lower limits for \eqn{\beta} to be used by the slice sampler. The length of the vector should be equal to the length of \eqn{\beta}. The default is -100 for all the elements of \eqn{\beta} (may not be appropriate for all situations). 
 #' @param upper.limits Vector of upper limits for \eqn{\beta} to be used by the slice sampler. The length of the vector should be equal to the length of \eqn{\beta}. The default is 100 for all the elements of \eqn{\beta} (may not be appropriate for all situations).
@@ -31,7 +31,7 @@ utils::globalVariables(c("r", "ev", "interval", "rtime", "evtime"))
 #' 
 #' Baseline hazard parameters for the 
 #' current and historical data are NOT shared. 
-#' The baseline hazards of the historical data are denoted by \eqn{\lambda_0}. We assume Gamma initial priors for \eqn{\lambda_0}
+#' The baseline hazards of the historical data are denoted by \eqn{\lambda_0}. We assume Gamma priors for \eqn{\lambda_0}
 #' and independent normal initial priors for \eqn{\beta}.   
 #' 
 #' Posterior samples are obtained through slice sampling. 
@@ -130,14 +130,22 @@ approximate.prior.beta <- function(historical, n.intervals, change.points=NULL,
 #'
 #' @description Power/type I error calculation using the normalized power prior for the proportional hazards model with piecewise constant hazard and random \eqn{a_0}
 #'
-#' @param prior.beta.mvn List of vectors of multivariate normal approximations of the normalized power prior for \eqn{\beta}. Each vector has three elements, 
+#' @param prior.beta.mvn List of multivariate normal approximations of the normalized power prior for \eqn{\beta}. Each element in the list is a list with three components, 
 #' the mean vector, the covariance matrix and the weight of the multivariate normal distribution. The normalized power prior for \eqn{\beta} 
-#' is approximated by the weighted mixture of the multivariate normal distributions provided. By default, a single multivariate normal distribution is assumed.
+#' is approximated by the weighted mixture of the multivariate normal distributions provided. By default (\code{prior.beta.mvn=NULL}), a single multivariate normal distribution is assumed.
 #' The user can use the \code{\link{approximate.prior.beta}} function to obtain samples of \eqn{\beta} from the normalized power prior, and use any mixture of multivariate normals to approximate 
 #' the normalized power prior for \eqn{\beta}.
-#' @param prior.lambda.hp1 Vector of first hyperparameters of the Gamma initial prior on \eqn{\lambda}. 
+#' @param prior.beta.mean (Only applies if \code{prior.beta.mvn=NULL}) Vector of means of the normal initial prior on \eqn{\beta}. The default value is zero for all the elements of \eqn{\beta}.
+#' @param prior.beta.sd (Only applies if \code{prior.beta.mvn=NULL}) Vector of standard deviations of the normal initial prior on \eqn{\beta}. The default value is 10^3 for all the elements of \eqn{\beta}. 
+#' @param prior.lambda0.hp1 (Only applies if \code{prior.beta.mvn=NULL}) Vector of first hyperparameters of the Gamma prior on \eqn{\lambda_0}. 
+#' The length of the vector should be equal to the dimension of \eqn{\lambda_0}, i.e., the total number of intervals for all strata. The default value is 10^(-5) for all the elements of \eqn{\lambda_0}.
+#' @param prior.lambda0.hp2 (Only applies if \code{prior.beta.mvn=NULL}) Vector of second hyperparameters of the Gamma prior on \eqn{\lambda_0}. 
+#' The length of the vector should be equal to the dimension of \eqn{\lambda_0}, i.e., the total number of intervals for all strata. The default value is 10^(-5) for all the elements of \eqn{\lambda_0}.
+#' @param prior.a0.shape1 (Only applies if \code{prior.beta.mvn=NULL}) Vector of the first shape parameters of the independent beta priors for \eqn{a_0}. The length of the vector should be equal to the number of historical datasets. The default is a vector of one's.
+#' @param prior.a0.shape2 (Only applies if \code{prior.beta.mvn=NULL}) Vector of the second shape parameters of the independent beta priors for \eqn{a_0}. The length of the vector should be equal to the number of historical datasets. The default is a vector of one's.
+#' @param prior.lambda.hp1 Vector of first hyperparameters of the Gamma prior on \eqn{\lambda}. 
 #' The length of the vector should be equal to the dimension of \eqn{\lambda}, i.e., the total number of intervals for all strata. The default value is 10^(-5) for all the elements of \eqn{\lambda}.
-#' @param prior.lambda.hp2 Vector of second hyperparameters of the Gamma initial prior on \eqn{\lambda}. 
+#' @param prior.lambda.hp2 Vector of second hyperparameters of the Gamma prior on \eqn{\lambda}. 
 #' The length of the vector should be equal to the dimension of \eqn{\lambda}, i.e., the total number of intervals for all strata. The default value is 10^(-5) for all the elements of \eqn{\lambda}.
 #' @param lower.limits Vector of lower limits for parameters (\eqn{\beta} and \eqn{\lambda}, in this order) to be used by the slice sampler. The length of the vector should be equal to the total number of parameters. The default is -100 for \eqn{\beta} and 0 for \eqn{\lambda} (may not be appropriate for all situations). 
 #' @param upper.limits Vector of upper limits for parameters (\eqn{\beta} and \eqn{\lambda}, in this order) to be used by the slice sampler. The length of the vector should be equal to the total number of parameters. The default is 100 for all parameters (may not be appropriate for all situations).
@@ -156,7 +164,7 @@ approximate.prior.beta <- function(historical, n.intervals, change.points=NULL,
 #' 
 #' Baseline hazard parameters for the 
 #' current and historical data are NOT shared. The baseline hazards of the current data are denoted by \eqn{\lambda}. 
-#' The baseline hazards of the historical data are denoted by \eqn{\lambda_0}. We assume Gamma initial priors for 
+#' The baseline hazards of the historical data are denoted by \eqn{\lambda_0}. We assume Gamma priors for 
 #' \eqn{\lambda} and \eqn{\lambda_0}.  
 #' 
 #' To perform sample size determination, we test the hypotheses
@@ -253,12 +261,14 @@ approximate.prior.beta <- function(historical, n.intervals, change.points=NULL,
 #' @import dplyr tidyr
 #' @importFrom stats cov runif rexp rbinom
 power.phm.random.a0 <- function(historical, n.subjects, n.events, 
-                               n.intervals, change.points, 
+                               n.intervals, change.points=NULL, 
                                samp.prior.beta, samp.prior.lambda, # list of matrices
                                dist.enroll, param.enroll,
                                rand.prob=0.5, prob.drop=0, param.drop=0, 
                                dist.csr="Constant", param.csr=10000, min.follow.up=0, max.follow.up=10000,
                                prior.beta.mvn=NULL,
+                               prior.beta.mean=rep(0,50), prior.beta.sd=rep(1000,50),
+                               prior.lambda0.hp1=rep(10^(-5),50), prior.lambda0.hp2=rep(10^(-5),50), 
                                prior.a0.shape1=rep(1,10), prior.a0.shape2=rep(1,10), 
                                prior.lambda.hp1=rep(10^(-5),50), prior.lambda.hp2=rep(10^(-5),50), 
                                lower.limits=NULL, upper.limits=rep(100, 50), slice.widths=rep(0.1, 50),
@@ -266,14 +276,19 @@ power.phm.random.a0 <- function(historical, n.subjects, n.events,
   
   # add zero and infinity to change.points
   change.points.new <- list()
-  for(i in 1:length(n.intervals)){
-    if(n.intervals[i]==1){
-      l1 <- c(0, Inf)
-    }else{
-      l <- change.points[[i]]
-      l1 <- unique(c(0, l, Inf))
+  
+  if(is.null(change.points)){
+    change.points.new <- create_intervals_historical(historical, n.intervals)
+  }else{
+    for(i in 1:length(n.intervals)){
+      if(n.intervals[i]==1){
+        l1 <- c(0, Inf)
+      }else{
+        l <- change.points[[i]]
+        l1 <- unique(c(0, l, Inf))
+      }
+      change.points.new[[i]] <- l1
     }
-    change.points.new[[i]] <- l1
   }
   
   
@@ -281,6 +296,8 @@ power.phm.random.a0 <- function(historical, n.subjects, n.events,
   if(is.null(prior.beta.mvn)){
     prior.beta <- approximate.prior.beta(historical, n.intervals, change.points=change.points.new,
                                          prior.a0.shape1=prior.a0.shape1, prior.a0.shape2=prior.a0.shape2, 
+                                         prior.beta.mean=prior.beta.mean, prior.beta.sd=prior.beta.sd,
+                                         prior.lambda0.hp1=prior.lambda0.hp1, prior.lambda0.hp2=prior.lambda0.hp2, 
                                          nMC=nMC, nBI=nBI)
     prior_beta_mu=colMeans(prior.beta)
     prior_beta_sigma=cov(prior.beta) # sigma is standard deviation
@@ -423,7 +440,7 @@ power.phm.random.a0 <- function(historical, n.subjects, n.events,
     # create tables
     # choose change points so that there are equal number of events in the intervals in pooled current and historical data
     change.points.analysis <- create_intervals(time=finaldf$new_y, event=finaldf$new_nu, S=finaldf$S, 
-                                               historical=historical, n.intervals=n.intervals)
+                                                 historical=historical, n.intervals=n.intervals)
     tables <- collapse_data(time=finaldf$new_y, event=finaldf$new_nu, X=finaldf[,1:ncol(x)], S=finaldf$S, 
                   historical=historical, n.intervals=n.intervals, change.points=change.points.analysis, dCurrent=TRUE)
     t1 <- tables[["curr_tables"]]
@@ -491,7 +508,6 @@ power.phm.random.a0 <- function(historical, n.subjects, n.events,
 #' @param change.points List of vectors. Each vector in the list contains the change points for the baseline hazards for each stratum. The length of the list should be equal to the total number of strata. 
 #' For a given stratum, if there is only one interval, then \code{change.points} should be \code{NULL} for that stratum. 
 #' By default, we assign the change points so that the same number of events are observed in all the intervals in the pooled current and historical data.  
-#' 
 #' @inheritParams power.phm.random.a0
 #' @inheritParams phm.fixed.a0
 #' 
@@ -577,9 +593,11 @@ power.phm.random.a0 <- function(historical, n.subjects, n.events,
 #' @export
 #' @import dplyr tidyr
 #' @importFrom stats cov 
-phm.random.a0 <- function(time, event, X, S, historical, n.intervals, change.points=NULL, prior.beta.mvn=NULL, 
+phm.random.a0 <- function(time, event, X, S, historical, n.intervals, change.points=NULL, prior.beta.mvn=NULL,
+                        prior.beta.mean=rep(0,50), prior.beta.sd=rep(1000,50),
+                        prior.lambda0.hp1=rep(10^(-5),50), prior.lambda0.hp2=rep(10^(-5),50), 
+                        prior.a0.shape1=rep(1,10), prior.a0.shape2=rep(1,10),
                         prior.lambda.hp1=rep(10^(-5),50), prior.lambda.hp2=rep(10^(-5),50), 
-                        prior.a0.shape1=rep(1,10), prior.a0.shape2=rep(1,10), 
                         lower.limits=NULL, upper.limits=rep(100, 50), slice.widths=rep(0.1, 50),
                         nMC=10000, nBI=250){
   
@@ -613,7 +631,9 @@ phm.random.a0 <- function(time, event, X, S, historical, n.intervals, change.poi
   # if prior.beta.mvn is NULL, make its default value a single multivariate normal
   if(is.null(prior.beta.mvn)){
     prior.beta <- approximate.prior.beta(historical, n.intervals, change.points=change.points.new,
-                                         prior.a0.shape1=prior.a0.shape1, prior.a0.shape2=prior.a0.shape2, 
+                                         prior.a0.shape1=prior.a0.shape1, prior.a0.shape2=prior.a0.shape2,
+                                         prior.beta.mean=prior.beta.mean, prior.beta.sd=prior.beta.sd,
+                                         prior.lambda0.hp1=prior.lambda0.hp1, prior.lambda0.hp2=prior.lambda0.hp2, 
                                          nMC=nMC, nBI=nBI)
     prior_beta_mu=colMeans(prior.beta)
     prior_beta_sigma=cov(prior.beta) # sigma is standard deviation

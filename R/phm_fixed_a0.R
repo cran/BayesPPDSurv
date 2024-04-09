@@ -184,7 +184,7 @@ collapse_data <- function(time, event, X, S, historical, n.intervals, change.poi
 #' @param n.events Number of events at which the trial will stop. 
 #' @param n.intervals Vector of integers, indicating the number of intervals for the baseline hazards for each stratum. The length of the vector should be equal to the total number of strata. 
 #' @param change.points List of vectors. Each vector in the list contains the change points for the baseline hazards for each stratum. The length of the list should be equal to the total number of strata.
-#' For a given stratum, if there is only one interval, then \code{change.points} should be \code{NULL} for that stratum.  
+#' For a given stratum, if there is only one interval, then \code{change.points} should be \code{NULL} for that stratum. By default, we assign the change points so that the same number of events are observed in all the intervals in the historical data.  
 #' These change points are used for data generation. The change points used during model fitting are assigned by default so that the same number of events are observed in all the intervals in the pooled historical and generated current data.  
 #' @param shared.blh Logical value indicating whether baseline hazard parameters are shared between the current and historical data. If TRUE, baseline hazard parameters are shared. The default value is FALSE. 
 #' @param samp.prior.beta Matrix of possible values of \eqn{\beta} to sample (with replacement) from. Each row is a possible \eqn{\beta} vector (a realization from the sampling prior for \eqn{\beta}).
@@ -346,7 +346,7 @@ collapse_data <- function(time, event, X, S, historical, n.intervals, change.poi
 #' @import dplyr tidyr 
 #' @importFrom stats runif rexp rbinom
 power.phm.fixed.a0 <- function(historical, a0, n.subjects, n.events, 
-                               n.intervals, change.points, shared.blh=FALSE,
+                               n.intervals, change.points=NULL, shared.blh=FALSE,
                                samp.prior.beta, samp.prior.lambda, # list of matrices
                                x.samples=matrix(), s.samples=NULL, # these two are matrices
                                dist.enroll, param.enroll,
@@ -360,15 +360,18 @@ power.phm.fixed.a0 <- function(historical, a0, n.subjects, n.events,
   
   # add zero and infinity to change.points
   change.points.new <- list()
-  
-  for(i in 1:length(n.intervals)){
-    if(n.intervals[i]==1){
-      l1 <- c(0, Inf)
-    }else{
-      l <- change.points[[i]]
-      l1 <- unique(c(0, l, Inf))
+  if(is.null(change.points)){
+    change.points.new <- create_intervals_historical(historical, n.intervals)
+  }else{
+    for(i in 1:length(n.intervals)){
+      if(n.intervals[i]==1){
+        l1 <- c(0, Inf)
+      }else{
+        l <- change.points[[i]]
+        l1 <- unique(c(0, l, Inf))
+      }
+      change.points.new[[i]] <- l1
     }
-    change.points.new[[i]] <- l1
   }
 
   # build matrix of covariates to sample from

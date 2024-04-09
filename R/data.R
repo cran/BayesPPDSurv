@@ -1,0 +1,23 @@
+#' Melanoma Clinical Trials E1684 and E1690
+#'
+#' A dataset for the E1684 clinical trial (1996) and the E1690 clinical trial (2000) conducted to assess the utility of interferon alfa-2b (INF) as an adjuvant therapy following surgery for deep primary or regionally metastatic melanoma.
+#' This dataset contains subjects in disease stage four only, i.e., regional lymph node recurrence at any interval
+#' after appropriate surgery for primary melanoma of any depth. 
+#'
+#' @format A data frame with 381 rows and 5 variables:
+#' \describe{
+#'   \item{study}{study number (1684 or 1690)}
+#'   \item{failtime}{time to relapse in years}
+#'   \item{rfscens}{censoring indicator for time to relapse (0 = did not relapse, 1 = relapsed)}
+#'   \item{trt}{treatment (1 if IFN and 0 if Observation)}
+#'   \item{stratum}{stratum index (1 if number of positive nodes <= 2 and 2 if number of positive nodes >= 3}
+#' }
+#' @source Kirkwood, J. M., J. G. Ibrahim, V. K. Sondak, J. Richards, L. E. Flaherty, M. S. Ernstoff, T. J. Smith,
+#' U. Rao, M. Steele, and R. H. Blum (2000, Jun). High- and low-dose interferon alfa-2b in high-risk 
+#' melanoma: first analysis of intergroup trial e1690/s9111/c9190. Journal of Clinical Oncology 18 (12),
+#' 2444–2458.
+#' 
+#' Kirkwood, J. M., M. H. Strawderman, M. S. Ernstoff, T. J. Smith, E. C. Borden, and R. H. Blum
+#' (1996). Interferon alfa-2b adjuvant therapy of high-risk resected cutaneous melanoma: the eastern
+#' cooperative oncology group trial est 1684. Journal of Clinical Oncology 14, 7–17.
+"melanoma"
